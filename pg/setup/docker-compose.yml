@@ -1,0 +1,28 @@
+version: "3.7"
+services:
+  pg_master:
+    build: ./master
+    volumes:
+      - ./pg_data/master:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=repdb
+      - POSTGRES_PASSWORD=repdbpass
+      - PG_REP_USER=repuser
+      - PG_REP_PASSWORD=repuserpass
+      - PG_PUBLICATION_NAME=wal_listener
+    ports:
+      - 5432:5432
+
+  pg_slave:
+    build: ./slave
+    volumes:
+      - ./pg_data/slave:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=repdb
+      - POSTGRES_PASSWORD=repdbpass
+      - PG_REP_USER=repuser
+      - PG_REP_PASSWORD=repuserpass
+      - PG_MASTER_HOST=pg_master
+    ports:
+      - 5433:5432
+    depends_on: [pg_master]
