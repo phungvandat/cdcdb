@@ -13,6 +13,7 @@ type columnInfo struct {
 }
 
 func setTableInfo() {
+	fmt.Println("table config loading...")
 	// Get list of table
 	var (
 		queryTableName = "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'"
@@ -48,7 +49,10 @@ func setTableInfo() {
 		if err != nil {
 			panic(err)
 		}
-
+		var (
+			tableID     uint32
+			columnInfos = []columnInfo{}
+		)
 		for columnRows.Next() {
 			var (
 				attrelid uint32
@@ -59,19 +63,19 @@ func setTableInfo() {
 			if err != nil {
 				panic(err)
 			}
-			var table, ok = mapTable[attrelid]
-			if !ok {
-				table = &tableInfo{
-					OID:  attrelid,
-					Name: tableName,
-				}
-				mapTable[attrelid] = table
-			}
-			table.OrderColumns = append(table.OrderColumns, columnInfo{
+			tableID = attrelid
+			columnInfos = append(columnInfos, columnInfo{
 				Name:     attname,
 				OrderNum: attnum,
 			})
 		}
 		columnRows.Close()
+		mapTable[tableID] = &tableInfo{
+			OID:          tableID,
+			Name:         tableName,
+			OrderColumns: columnInfos,
+		}
 	}
+
+	fmt.Println("table config loaded!")
 }

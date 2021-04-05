@@ -6,8 +6,8 @@
 
 - [PostgreSQL 13.2](https://www.postgresql.org/docs/13/release-13-2.html) : [Write-Ahead Logging (WAL)](https://www.postgresql.org/docs/13/wal-intro.html)
   - [x] `insert`
-  - [ ] `update`
-  - [ ] `delete`
+  - [x] `update`
+  - [x] `delete`
 - [MongoDB 4.4](https://docs.mongodb.com/manual/release-notes/4.4/): [Change Streams](https://docs.mongodb.com/manual/changeStreams/)
   - [ ] `insert`
   - [ ] `update`
