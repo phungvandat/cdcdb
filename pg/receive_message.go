@@ -82,42 +82,111 @@ func decodeMessage(data []byte) *walDecodeMessage {
 	case 'I': // insert
 		return d.Insert()
 	case 'U': // update
-		return nil
+		return d.Update()
 	case 'D': // delete
-		return nil
+		return d.Delete()
 	}
 	return nil
 }
 
+func (d *decoder) Delete() *walDecodeMessage {
+	id := d.int32()
+	isK := d.buf.Next(1)[0] == 'K'
+	if !isK {
+		d.buf.UnreadByte()
+	}
+	isO := d.buf.Next(1)[0] == 'O'
+	if !isO {
+		d.buf.UnreadByte()
+	}
+
+	var (
+		data = d.tupleData()
+		wdm  = &walDecodeMessage{
+			Event:   "DELETE",
+			Columns: make(map[string]interface{}),
+		}
+	)
+	wdm.mapWithTable(id, data)
+	return wdm
+}
+
+func (d *decoder) Update() *walDecodeMessage {
+	id := d.int32()
+	isK := d.buf.Next(1)[0] == 'K'
+	if !isK {
+		d.buf.UnreadByte()
+	}
+	isO := d.buf.Next(1)[0] == 'O'
+	if !isO {
+		d.buf.UnreadByte()
+	}
+
+	if isK || isO {
+		d.tupleData()
+	}
+
+	var (
+		_    = d.newTuple()
+		rows = d.tupleData()
+		wdm  = &walDecodeMessage{
+			Event:   "UPDATE",
+			Columns: make(map[string]interface{}),
+		}
+	)
+	wdm.mapWithTable(id, rows)
+
+	return wdm
+}
+
 func (d *decoder) Insert() *walDecodeMessage {
 	var (
-		id        = d.int32()
-		_         = d.newTuple()
-		data      = d.tupleData()
-		table, ok = mapTable[id]
-		wdm       = &walDecodeMessage{
+		id   = d.int32()
+		_    = d.newTuple()
+		data = d.tupleData()
+		wdm  = &walDecodeMessage{
 			Event:   "INSERT",
 			Columns: make(map[string]interface{}),
 		}
 	)
+	wdm.mapWithTable(id, data)
 
+	return wdm
+}
+
+func (wdm *walDecodeMessage) mapWithTable(tableID uint32, data [][]byte) {
+	lTableNum := 0
+loadTable:
+	_, ok := mapTable[tableID]
 	if !ok {
-		log.WithField("table_oid", id).Warningf("not exists")
-		return nil
+		log.WithField("table_oid", tableID).Warningf("not exists")
+		setTableInfo()
+		lTableNum++
+		if lTableNum == 10 {
+			log.WithField("table_oid", tableID).Warningf("reload table config number of times exceeded")
+			return
+		}
+		goto loadTable
 	}
-
+	lColumnsNum := 0
+loadColumns:
+	table := mapTable[tableID]
 	wdm.Table = table.Name
 	if len(table.OrderColumns) != len(data) {
-		log.WithField("table_oid", id).Warningf("columns table changed")
-		return nil
+		log.WithField("table", table.Name).Warningf("columns table changed")
+		setTableInfo()
+		lColumnsNum++
+		if lColumnsNum == 10 {
+			log.WithField("table", table.Name).Warningf("reload columns number of times exceeded")
+			return
+		}
+		goto loadColumns
 	}
 
 	for idx := range data {
 		var d = data[idx]
 		wdm.Columns[table.OrderColumns[idx].Name] = string(d)
 	}
-
-	return wdm
 }
 
 type walDecodeMessage struct {
