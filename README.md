@@ -40,3 +40,17 @@
   ```
   make dev
   ```
+
+### `MongoDB`
+
+- Into the executable directory
+
+  ```
+  cd mongodb
+  ```
+
+- Setup replication MongoDB inside docker evironment:
+
+  ```
+  make setup
+  ```
