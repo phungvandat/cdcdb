@@ -9,10 +9,10 @@
   - [x] `update`
   - [x] `delete`
 - [MongoDB 4.4](https://docs.mongodb.com/manual/release-notes/4.4/): [Change Streams](https://docs.mongodb.com/manual/changeStreams/)
-  - [ ] `insert`
-  - [ ] `update`
-  - [ ] `replace`
-  - [ ] `delete`
+  - [x] `insert`
+  - [x] `update`
+  - [x] `replace`
+  - [x] `delete`
 - [MySQL 8.0](https://dev.mysql.com/doc/relnotes/mysql/8.0/en/): [Binary Log](https://dev.mysql.com/doc/internals/en/binary-log-overview.html)
   - [ ] `insert`
   - [ ] `update`
@@ -54,3 +54,11 @@
   ```
   make setup
   ```
+
+- Start listening:
+
+  ```
+  make dev
+  ```
+
+- Create collection and insert, delete or update some documents.
